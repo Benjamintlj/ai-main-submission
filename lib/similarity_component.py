@@ -7,6 +7,7 @@ import ssl
 
 from nltk import WordNetLemmatizer, pos_tag
 from nltk.corpus import stopwords, wordnet
+from textblob import TextBlob
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import word_tokenize
@@ -38,6 +39,26 @@ stop_words = set(stopwords.words('english'))
 #######################################################
 # Methods
 #######################################################
+def response_tone(user_message, answers):
+    """
+    Gets the tone of the users message, then responds with a similar tone.
+    :param user_message: The users message.
+    :param answers: A tuple of answers: [0] - neutral, [1] - negative, [2] - positive.
+    :return: A response matching the users tone.
+    """
+    text_blob = TextBlob(user_message)
+    sentiment = text_blob.sentiment.polarity
+
+    if sentiment > 0:
+        response = answers[2]
+    elif sentiment < 0:
+        response = answers[1]
+    else:
+        response = answers[0]
+
+    return response
+
+
 def get_wordnet_part_of_speech(part_of_speech):
     """
     Gets the wordnet POS for a given treebank tag.
@@ -93,7 +114,7 @@ def get_most_similar_question_and_answer(users_question):
         csv_answers = []
         for row in reader:
             csv_questions.append(row[0])
-            csv_answers.append(row[1])
+            csv_answers.append((row[1], row[2], row[3]))
 
         # Get the tf*idf of each token
         vectorizer = TfidfVectorizer(tokenizer=lemmatisation_tokenizer)
@@ -111,5 +132,9 @@ def get_most_similar_question_and_answer(users_question):
                 highest_index = index
                 highest_similarity = similarity
 
-        print(highest_similarity)
-        return csv_answers[highest_index] if highest_index is not None else 'I am sorry, I do not know'
+        if highest_index is None:
+            response = 'I am sorry, I do not know'
+        else:
+            response = response_tone(users_question, csv_answers[highest_index])
+
+        return response

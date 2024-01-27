@@ -6,7 +6,6 @@ from lib.similarity_component import get_most_similar_question_and_answer
 #######################################################
 # Imports
 #######################################################
-import wikipedia
 import aiml
 
 #######################################################
@@ -43,7 +42,6 @@ def main():
         # post-process the answer for commands
         if answer[0] == '#':
             params = answer[1:].split('$')
-            print(params[0])
             cmd = int(params[0])
             if cmd == 0:
                 print(params[1])
